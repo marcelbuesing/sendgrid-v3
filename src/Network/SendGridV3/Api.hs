@@ -130,6 +130,94 @@ $(deriveToJSON (defaultOptions
               , omitNothingFields = True
               , constructorTagModifier = map toLower }) ''Asm)
 
+-- | This allows you to have a blind carbon copy automatically sent to the specified
+-- | email address for every email that is sent.
+data Bcc = Bcc
+  { -- | Indicates if this setting is enabled.
+    _bccEnable :: Maybe Bool
+    -- | The email address that you would like to receive the BCC.
+  , _bccEmail  :: Maybe T.Text
+  } deriving (Show, Eq)
+
+$(deriveToJSON (defaultOptions
+              { fieldLabelModifier = drop (length ("_bcc" :: String))
+              , omitNothingFields = True
+              , constructorTagModifier = map toLower }) ''Bcc)
+
+-- | Allows you to bypass all unsubscribe groups and suppressions to ensure that the
+-- |email is delivered to every single recipient. This should only be used in emergencies
+-- | when it is absolutely necessary that every recipient receives your email.
+data BypassListManagement = BypassListManagement
+  { -- | Indicates if this setting is enabled.
+    _bypassListManagementEnable :: Bool
+  } deriving (Show, Eq)
+
+$(deriveToJSON (defaultOptions
+              { fieldLabelModifier = drop (length ("_bypassListManagement" :: String))
+              , constructorTagModifier = map toLower }) ''BypassListManagement)
+
+-- | The default footer that you would like included on every email.
+data Footer = Footer
+  { -- | Indicates if this setting is enabled.
+    _footerEnable :: Maybe Bool
+  -- | The plain text content of your footer.
+  , _footerText   :: Maybe T.Text
+  -- | The HTML content of your footer.
+  , _footerHtml   :: Maybe T.Text
+  } deriving (Show, Eq)
+
+$(deriveToJSON (defaultOptions
+              { fieldLabelModifier = drop (length ("_footer" :: String))
+              , omitNothingFields = True
+              , constructorTagModifier = map toLower }) ''Footer)
+
+-- | This allows you to send a test email to ensure that your request body is valid and formatted correctly.
+data SandboxMode = SandboxMode
+  { -- | Indicates if this setting is enabled.
+    _sandboxModeEnable :: Bool
+  } deriving (Show, Eq)
+
+$(deriveToJSON (defaultOptions
+              { fieldLabelModifier = drop (length ("_sandboxMode" :: String))
+              , constructorTagModifier = map toLower }) ''SandboxMode)
+
+-- | This allows you to test the content of your email for spam.
+data SpamCheck = SpamCheck
+  { -- | Indicates if this setting is enabled.
+    _spamCheckEnable    :: Maybe Bool
+  -- | The threshold used to determine if your content qualifies as spam on a scale from 1 to 10,
+  -- | with 10 being most strict, or most likely to be considered as spam.
+  , _spamCheckThreshold :: Maybe Int
+  -- | An Inbound Parse URL that you would like a copy of your email along with the spam report to be sent to.
+  , _spamCheckPostToUrl :: Maybe T.Text
+  } deriving (Show, Eq)
+
+$(deriveToJSON (defaultOptions
+              { fieldLabelModifier = drop (length ("_spamCheck" :: String))
+              , omitNothingFields = True
+              , constructorTagModifier = map toLower }) ''SpamCheck)
+
+-- | A collection of different mail settings that you can use to specify how you would like this email to be handled.
+data MailSettings = MailSettings
+ {
+-- | This allows you to have a blind carbon copy automatically sent to the specified
+-- | email address for every email that is sent.
+   _mailSettingsBcc                   :: Maybe Bcc
+ -- | -- | Allows you to bypass all unsubscribe groups and suppressions.
+ , _mailSettingsBypassListManagement  :: Maybe BypassListManagement
+ -- | The default footer that you would like included on every email.
+ , _mailSettingsFooter                :: Maybe Footer
+ -- | This allows you to send a test email to ensure that your request body is valid and formatted correctly.
+ , _mailSettingsSandboxMode           :: Maybe SandboxMode
+ -- | This allows you to test the content of your email for spam.
+ , _mailSettingsSpamCheck             :: Maybe SpamCheck
+ } deriving (Show, Eq)
+
+$(deriveToJSON (defaultOptions
+              { fieldLabelModifier = drop (length ("_mailSettings" :: String))
+              , omitNothingFields = True
+              , constructorTagModifier = map toLower }) ''MailSettings)
+
 data Mail a b = Mail
   { -- | An array of messages and their metadata.
     -- | Each object within personalizations can be thought of as an envelope
@@ -173,7 +261,7 @@ data Mail a b = Mail
   , _mailIpPoolName       :: Maybe T.Text
 --  -- | A collection of different mail settings that you can use to specify how you would
 --  -- | like this email to be handled.
---  , _mailMailSettings     :: Maybe MailSettings
+  , _mailMailSettings     :: Maybe MailSettings
 --  -- | Settings to determine how you would like to track the metrics of how your recipients
 --  -- | interact with your email.
 --  , _mailTrackingSettings :: Maybe MailTrackingSettings
@@ -204,7 +292,7 @@ mail personalizations from subject content =
   , _mailBatchId          = Nothing
   , _mailAsm              = Nothing
   , _mailIpPoolName       = Nothing
---  , _mailMailSettings     :: MailSettings
+  , _mailMailSettings     = Nothing
 --  , _mailTrackingSettings :: MailTrackingSettings
   }
 
