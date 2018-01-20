@@ -15,10 +15,15 @@ main :: IO ()
 main = do
   sendgridKey  <- getSendGridKey
   testMailAddr <- getTestEmailAddress
-  defaultMain $
-    testCase "Send email simple" $ do
-    statusCode <- sendMail sendgridKey (testMail testMailAddr)
-    statusCode @?= 202
+  defaultMain $ testGroup "SendGrid v3 API"
+    [
+      testCase "Send email simple" $ do
+        statusCode <- sendMail sendgridKey (testMail testMailAddr)
+        statusCode @?= 202
+    , testCase "Send email with opts" $ do
+        statusCode <- sendMail sendgridKey ((testMail testMailAddr) { _mailSendAt = Just 1516468000 })
+        statusCode @?= 202
+    ]
 
 getSendGridKey :: IO ApiKey
 getSendGridKey = do

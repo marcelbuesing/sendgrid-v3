@@ -19,7 +19,10 @@ testMail addr =
 
 main :: IO ()
 main = do
+  -- Simple Send
   statusCode <- sendMail sendGridApiKey testMail
+  -- Send with further options
+  statusCode <- sendMail sendGridApiKey (testMail { _mailSendAt = Just 1516468000 })
   return ()
 ```
 
