@@ -4,14 +4,16 @@
 -- | https://sendgrid.com/docs/API_Reference/api_v3.html
 module Network.SendGridV3.Api where
 
-import Control.Lens hiding ((.=))
-import Control.Lens.TH
-import Data.Aeson
-import Data.List.NonEmpty
-import Data.Semigroup ((<>))
-import Data.Text as T
-import Data.Text.Encoding
-import Network.Wreq
+import           Control.Lens hiding ((.=), from, to)
+import           Control.Lens.TH
+import           Data.Aeson
+import           Data.Aeson.TH
+import           Data.Char (toLower)
+import           Data.List.NonEmpty (NonEmpty)
+import           Data.Semigroup ((<>))
+import qualified Data.Text as T
+import           Data.Text.Encoding
+import           Network.Wreq hiding (Options)
 
 sendGridAPI :: T.Text
 sendGridAPI = "https://api.sendgrid.com/v3/mail/send"
@@ -26,11 +28,9 @@ data MailAddress = MailAddress
   , _mailAddressName  :: T.Text
   } deriving (Show, Eq)
 
-instance ToJSON MailAddress where
-  toJSON (MailAddress e n) =
-    object [ "email" .= e
-           , "name"  .= n
-           ]
+$(deriveToJSON (defaultOptions
+              { fieldLabelModifier = drop (length ("_mailAddress" :: String))
+              , constructorTagModifier = map toLower }) ''MailAddress)
 
 data MailContent = MailContent
   { -- | The mime type of the content you are including in your email. For example, “text/plain” or “text/html”.
@@ -39,28 +39,50 @@ data MailContent = MailContent
   , _mailContentValue :: T.Text
   } deriving (Show, Eq)
 
-instance ToJSON MailContent where
-  toJSON (MailContent typ val) =
-    object [ "type"  .= typ
-           , "value" .= val
-           ]
+mailContentText :: T.Text -> MailContent
+mailContentText txt = MailContent "text/plain" txt
+
+mailContentHtml :: T.Text -> MailContent
+mailContentHtml html = MailContent "text/html" html
+
+$(deriveToJSON (defaultOptions
+              { fieldLabelModifier = drop (length ("_mailContent" :: String))
+              , omitNothingFields = True
+              , constructorTagModifier = map toLower }) ''MailContent)
 
 -- | An array of messages and their metadata. Each object within personalizations can be thought of as an envelope
 -- | - it defines who should receive an individual message and how that message should be handled.
 data Personalization = Personalization
-  { _personalizationTo      :: [MailAddress]
-  , _personalizationCc      :: [MailAddress]
-  , _personalizationBcc     :: [MailAddress]
-  , _personalizationSubject :: T.Text
+  { -- | An array of recipients. Each object within this array may contain the name, but must
+    -- | always contain the email, of a recipient. Each object within personalizations can be thought of as an envelope
+    -- | - it defines who should receive an individual message and how that message should be handled.
+    _personalizationTo            :: NonEmpty MailAddress
+    -- | An array of recipients who will receive a copy of your email.
+  , _personalizationCc            :: Maybe [MailAddress]
+  -- | An array of recipients who will receive a blind carbon copy of your email. Each object within this array may
+  -- | contain the name, but must always contain the email, of a recipient.
+  , _personalizationBcc           :: Maybe [MailAddress]
+  , _personalizationSubject       :: Maybe T.Text
+  , _personalizationHeaders       :: Maybe [(T.Text, T.Text)]
+  , _personalizationSubstitutions :: Maybe [(T.Text, T.Text)]
+  , _personalizationSendAt        :: Maybe Int
   } deriving (Show, Eq)
 
-instance ToJSON Personalization where
-  toJSON (Personalization to cc bcc sub) =
-    object [ "to"      .= to
-           , "cc"      .= cc
-           , "bcc"     .= bcc
-           , "subject" .= sub
-           ]
+personalization :: (NonEmpty MailAddress) -> Personalization
+personalization to =
+  Personalization
+  { _personalizationTo            = to
+  , _personalizationCc            = Nothing
+  , _personalizationBcc           = Nothing
+  , _personalizationSubject       = Nothing
+  , _personalizationHeaders       = Nothing
+  , _personalizationSubstitutions = Nothing
+  , _personalizationSendAt        = Nothing
+  }
+
+$(deriveToJSON (defaultOptions
+              { fieldLabelModifier = drop (length ("_personalization" :: String))
+              , constructorTagModifier = map toLower }) ''Personalization)
 
 -- | The content-disposition of the attachment specifying how you would like the attachment to be displayed.
 data Disposition =
@@ -70,6 +92,10 @@ data Disposition =
   -- | displayed (e.g. opening or downloading the file).
   | Attachment
   deriving (Show, Eq)
+
+instance ToJSON Disposition where
+  toJSON Inline = "inline"
+  toJSON Attachment = "attachment"
 
 data MailAttachment = MailAttachment
   { -- | The Base64 encoded content of the attachment.
@@ -85,6 +111,11 @@ data MailAttachment = MailAttachment
   , _mailAttachmentContentId   :: T.Text
   } deriving (Show, Eq)
 
+$(deriveToJSON (defaultOptions
+              { fieldLabelModifier = drop (length ("_mailAttachment" :: String))
+              , omitNothingFields = True
+              , constructorTagModifier = map toLower }) ''MailAttachment)
+
 -- | An object allowing you to specify how to handle unsubscribes.
 data Asm = Asm
   { -- | The unsubscribe group to associate with this email.
@@ -94,13 +125,20 @@ data Asm = Asm
   , _asmGroupsToDisplay :: Maybe [Int]
   } deriving (Show, Eq)
 
+$(deriveToJSON (defaultOptions
+              { fieldLabelModifier = drop (length ("_asm" :: String))
+              , omitNothingFields = True
+              , constructorTagModifier = map toLower }) ''Asm)
+
 data Mail a b = Mail
   { -- | An array of messages and their metadata.
     -- | Each object within personalizations can be thought of as an envelope
     -- | - it defines who should receive an individual message and how that message should be handled.
     _mailPersonalizations :: [Personalization]
+  -- | Address details of the person to whom you are sending an email.
   , _mailFrom             :: MailAddress
-  , _mailReplyTo          :: MailAddress
+  -- | Address details of the person to whom you are sending an email.
+  , _mailReplyTo          :: Maybe MailAddress
   , _mailSubject          :: T.Text
   -- | An array in which you may specify the content of your email.
   -- | You can include multiple mime types of content, but you must specify at least one mime type.
@@ -135,31 +173,51 @@ data Mail a b = Mail
   , _mailIpPoolName       :: Maybe T.Text
 --  -- | A collection of different mail settings that you can use to specify how you would
 --  -- | like this email to be handled.
---  , _mailMailSettings     :: MailSettings
+--  , _mailMailSettings     :: Maybe MailSettings
 --  -- | Settings to determine how you would like to track the metrics of how your recipients
 --  -- | interact with your email.
---  , _mailTrackingSettings :: MailTrackingSettings
+--  , _mailTrackingSettings :: Maybe MailTrackingSettings
   } deriving (Show, Eq)
+
+$(deriveToJSON (defaultOptions
+              { fieldLabelModifier = drop (length ("_mail" :: String))
+              , omitNothingFields = True
+              , constructorTagModifier = map toLower }) ''Mail)
 
 makeLenses ''Mail
 
-instance ToJSON (Mail a b) where
-  toJSON m =
-    object [ "personalizations" .= (m ^. mailPersonalizations)
-           , "from"             .= (m ^. mailFrom)
-           , "reply_to"         .= (m ^. mailReplyTo)
-           , "subject"          .= (m ^. mailSubject)
-           , "content"          .= (m ^. mailContent)
-           ]
+mail :: (ToJSON a, ToJSON b) => [Personalization] -> MailAddress -> T.Text -> (NonEmpty MailContent) -> Mail a b
+mail personalizations from subject content =
+  Mail
+  { _mailPersonalizations = personalizations
+  , _mailFrom             = from
+  , _mailReplyTo          = Nothing
+  , _mailSubject          = subject
+  , _mailContent          = content
+  , _mailAttachments      = Nothing
+  , _mailTemplateId       = Nothing
+  , _mailSections         = Nothing :: Maybe a
+  , _mailHeaders          = Nothing
+  , _mailCategories       = Nothing
+  , _mailCustomArgs       = Nothing :: Maybe b
+  , _mailSendAt           = Nothing
+  , _mailBatchId          = Nothing
+  , _mailAsm              = Nothing
+  , _mailIpPoolName       = Nothing
+--  , _mailMailSettings     :: MailSettings
+--  , _mailTrackingSettings :: MailTrackingSettings
+  }
 
 -- | Send an email via the SendGrid API.
 -- | `a` -  Type of Mail Section, see `_mailSections` for details
 -- | `b` -  Type of Custom Arg, see `_mailCustomArgs` for details
-sendMail :: (ToJSON a, ToJSON b) => ApiKey -> Mail a b -> IO Status
-sendMail (ApiKey key) mail = do
+-- | Example:
+-- |
+sendMail :: (ToJSON a, ToJSON b) => ApiKey -> Mail a b -> IO Int
+sendMail (ApiKey key) mail' = do
   let tkn = encodeUtf8 $ "Bearer " <> key
       opts = defaults &
           (header "Authorization" .~ [tkn])
         . (header "Content-Type" .~ ["application/json"])
-  r <- postWith opts (T.unpack sendGridAPI) (toJSON mail)
-  return $ r ^. responseStatus
+  r <- postWith opts (T.unpack sendGridAPI) (toJSON mail')
+  return $ r ^. responseStatus . statusCode
