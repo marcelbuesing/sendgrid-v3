@@ -7,6 +7,9 @@ A library for accessing the [v3 SendGrid API](https://sendgrid.com/docs/API_Refe
 import Data.List.NonEmpty (fromList)
 import Network.SendGridV3.Api
 
+sendGridApiKey :: ApiKey
+sendGridApiKey = "SG..."
+
 testMail :: Mail () ()
 testMail addr =
   let from'    = "john.doe+from@doe.com"
@@ -16,7 +19,7 @@ testMail addr =
 
 main :: IO ()
 main = do
-  statusCode <- sendMail sendgridKey (testMail testMailAddr)
+  statusCode <- sendMail sendGridApiKey testMail
   return ()
 ```
 
