@@ -1,0 +1,13 @@
+sudo: false
+cache:
+  directories:
+  - "$HOME/.stack"
+before_install:
+- mkdir -p ~/.local/bin
+- export PATH=$HOME/.local/bin:$PATH
+- travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards
+  --strip-components=1 -C ~/.local/bin '*/stack'
+script:
+- stack --no-terminal --skip-ghc-check test
+dd:
+  secure: vfOQY96PrTV7X3Fiw70J/02nWJbPUDidngw98q7WYaCrIhCGzMr+Ioj67szGIePctcCI24IsSibDxd+itZ3p9W+bNsrhE7gxeDCfp3iTqyyu4eHlsYR7bf/S4RorHkubzSYWs05XBpLJrPi1z436nmjHmveoXhFhVtu9xNHhelQrP/nxDipR2Ce2RjARAkecCZ75F1e1OcMCrqbwTxVAsj4P6BVXQboNFqwcQXE9WX/wzukbS2nE6n02Yn+1TbUOKJKCzlvzrR1Rz5KrcVYZ1c7ZL5QUTI8MmqswiMRb5/HVU7rAvTCpAvADIfipaZOPsMj3KtQQu1bL9uPWp47JVW0LWIo177nwT5z5JnupOXGrQ34CQdtjFejV5tvJJFIprXiCBfMyC0KSurjGCrB+mm9Z62bejsZmYL7DnLUjdlojQaPo8Nqoa0fHjDMPmRZ9wnzyCUyfqbVK8aPsfVYfx2Yeswg1WwuKNjVlER34UZyerahjN74rjn7SjhkImoboRHm3TIATlUtTVgEL6GBSwvqfhFBnY5+cYq10W4nKXMxo7h+DuwQOGij7ZPxHV4RVDM2RZ5nYV+eQyYaPqs9IydqHxC500v21Lxe3WigXYUJrk1ht0DaMa0GCFg5ece3mpVal9pntA6LqAE0cfuwMCg0J8cq2nS9vtdShspXFL50=
