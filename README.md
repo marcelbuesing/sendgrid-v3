@@ -1,4 +1,6 @@
 # SendGrid-v3
+[![Build Status](https://travis-ci.org/marcelbuesing/sendgrid-v3.svg?branch=dev)](https://travis-ci.org/marcelbuesing/sendgrid-v3)
+
 A library for accessing the [v3 SendGrid API](https://sendgrid.com/docs/API_Reference/api_v3.html) in Haskell.
 
 ```Haskell
