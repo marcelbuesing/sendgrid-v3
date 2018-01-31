@@ -4,7 +4,7 @@
 name:                sendgrid-v3
 version:             0.1.0.0
 synopsis:            Sendgrid v3 API library
--- description:
+description:         SendGrid v3 Mail API client
 homepage:            https://github.com/marcelbuesing/sendgrid-v3
 license:             MIT
 license-file:        LICENSE
