@@ -15,6 +15,9 @@ category:            Network
 build-type:          Simple
 extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
+source-repository head
+  type:              git
+  location:          https://github.com/marcelbuesing/sendgrid-v3
 
 library
   exposed-modules:     Network.SendGridV3.Api
