@@ -40,5 +40,3 @@ getTestEmailAddress = do
     Nothing -> error
       "Please supply an email address for testing via the ENV var `SENDGRID_TEST_MAIL`"
     Just a -> return $ MailAddress (T.pack a) "John Doe"
-
-
