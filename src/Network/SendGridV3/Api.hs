@@ -197,6 +197,87 @@ $(deriveToJSON (defaultOptions
               , omitNothingFields = True
               , constructorTagModifier = map toLower }) ''SpamCheck)
 
+-- | Allows you to track whether a recipient clicked a link in your email.
+data ClickTracking = ClickTracking
+  { -- | Indicates if this setting is enabled.
+    _clickTrackingEnable     :: Maybe Bool
+    -- | Indicates if this setting should be included in the text/plain portion of your email.
+  , _clickTrackingEnableText :: Maybe Bool
+  } deriving (Show, Eq)
+
+$(deriveToJSON (defaultOptions
+              { fieldLabelModifier = drop (length ("_clickTracking" :: String))
+              , omitNothingFields = True
+              , constructorTagModifier = map toLower }) ''ClickTracking)
+
+
+-- | Allows you to track whether the email was opened or not.
+data OpenTracking = OpenTracking
+  { -- | Indicates if this setting is enabled.
+    _openTrackingEnable          :: Maybe Bool
+    -- | Allows you to specify a substitution tag that you can insert in the body of your email.
+  , _openTrackingSubstitutionTag :: Maybe T.Text
+  } deriving (Show, Eq)
+
+$(deriveToJSON (defaultOptions
+              { fieldLabelModifier = drop (length ("_openTracking" :: String))
+              , omitNothingFields = True
+              , constructorTagModifier = map toLower }) ''OpenTracking)
+
+-- | Allows you to insert a subscription management link.
+data SubscriptionTracking = SubscriptionTracking
+  { -- | Indicates if this setting is enabled.
+    _subscriptionTrackingEnable          :: Maybe Bool
+  -- | Text to be appended to the email, with the subscription tracking link.
+  , _subscriptionTrackingText            :: Maybe T.Text
+  -- | HTML to be appended to the email, with the subscription tracking link.
+  , _subscriptionTrackingHTML            :: Maybe T.Text
+  -- | A tag that will be replaced with the unsubscribe URL.
+  , _subscriptionTrackingSubstitutionTag :: Maybe T.Text
+  } deriving (Show, Eq)
+
+$(deriveToJSON (defaultOptions
+              { fieldLabelModifier = drop (length ("_subscriptionTracking" :: String))
+              , omitNothingFields = True
+              , constructorTagModifier = map toLower }) ''SubscriptionTracking)
+
+-- | Allows you to enable tracking provided by Google Analytics
+data Ganalytics = Ganalytics
+  {  -- | Indicates if this setting is enabled.
+    _ganalyticsEnable      :: Maybe Bool
+  -- | Name of the referrer source. (e.g. Google, SomeDomain.com, or Marketing Email)
+  , _ganalyticsUTMSource   :: Maybe T.Text
+  -- | Name of the marketing medium. (e.g. Email)
+  , _ganalyticsUTMMedium   :: Maybe T.Text
+  -- | Used to identify any paid keywords.
+  , _ganalyticsUTMTerm     :: Maybe T.Text
+  -- | Used to differentiate your campaign from advertisements.
+  , _ganalyticsUTMContent  :: Maybe T.Text
+  -- | The name of the campaign.
+  , _ganalyticsUTMCampaign :: Maybe T.Text
+  } deriving (Show, Eq)
+
+$(deriveToJSON (defaultOptions
+              { fieldLabelModifier = drop (length ("_ganalytics" :: String))
+              , omitNothingFields = True
+              , constructorTagModifier = map toLower }) ''Ganalytics)
+
+data TrackingSettings = TrackingSettings
+  { -- | Allows you to track whether a recipient clicked a link in your email.
+    _trackingSettingsClickTracking        :: ClickTracking
+  -- | Allows you to track whether the email was opened or not.
+  , _trackingSettingsOpenTracking         :: OpenTracking
+  -- | Allows you to insert a subscription management link
+  , _trackingSettingsSubscriptionTracking :: SubscriptionTracking
+  -- | Allows you to enable tracking provided by Google Analytics.
+  , _trackingSettingsGanalytics           :: Ganalytics
+  } deriving (Show, Eq)
+
+$(deriveToJSON (defaultOptions
+              { fieldLabelModifier = drop (length ("_trackingSettings" :: String))
+              , omitNothingFields = True
+              , constructorTagModifier = map toLower }) ''TrackingSettings)
+
 -- | A collection of different mail settings that you can use to specify how you would like this email to be handled.
 data MailSettings = MailSettings
  {
@@ -264,7 +345,7 @@ data Mail a b = Mail
   , _mailMailSettings     :: Maybe MailSettings
 --  -- | Settings to determine how you would like to track the metrics of how your recipients
 --  -- | interact with your email.
---  , _mailTrackingSettings :: Maybe MailTrackingSettings
+  , _mailTrackingSettings :: Maybe TrackingSettings
   } deriving (Show, Eq)
 
 $(deriveToJSON (defaultOptions
@@ -293,7 +374,7 @@ mail personalizations from subject content =
   , _mailAsm              = Nothing
   , _mailIpPoolName       = Nothing
   , _mailMailSettings     = Nothing
---  , _mailTrackingSettings :: MailTrackingSettings
+  , _mailTrackingSettings = Nothing
   }
 
 -- | Send an email via the SendGrid API.
