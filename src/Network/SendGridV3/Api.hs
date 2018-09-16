@@ -6,27 +6,29 @@
 --
 -- >
 -- > {-# LANGUAGE OverloadedStrings #-}
--- >
+-- > 
 -- > import Data.List.NonEmpty (fromList)
 -- > import Network.SendGridV3.Api
--- >
+-- > 
 -- > sendGridApiKey :: ApiKey
--- > sendGridApiKey = "SG..."
--- >
+-- > sendGridApiKey = ApiKey "SG..."
+-- > 
 -- > testMail :: Mail () ()
--- > testMail addr =
--- >   let from'    = "john.doe+from@doe.com"
--- >       subject' = "Email Subject"
--- >       content' = fromList [mailContentText "Example Content"]
--- >   in mail [] from' subject' content'
--- >
+-- > testMail =
+-- >   let to = personalization $ fromList [MailAddress "john@example.com" "John Doe"]
+-- >       from = MailAddress "jane@example.com" "Jane Smith"
+-- >       subject = "Email Subject"
+-- >       content = fromList [mailContentText "Example Content"]
+-- >   in mail [to] from subject content
+-- > 
 -- > main :: IO ()
 -- > main = do
 -- >   -- Simple Send
 -- >   statusCode <- sendMail sendGridApiKey testMail
+-- >   print statusCode
 -- >   -- Send with further options
--- >   statusCode <- sendMail sendGridApiKey (testMail { _mailSendAt = Just 1516468000 })
--- >   return ()
+-- >   statusCode' <- sendMail sendGridApiKey (testMail { _mailSendAt = Just 1516468000 })
+-- >   print statusCode'
 --
 module Network.SendGridV3.Api where
 
