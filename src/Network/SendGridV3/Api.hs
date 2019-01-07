@@ -101,6 +101,8 @@ data Personalization = Personalization
   -- | A unix timestamp allowing you to specify when you want your email to be delivered.
   --   Scheduling more than 72 hours in advance is forbidden.
   , _personalizationSendAt        :: Maybe Int
+  -- | A JSON object to include as dynamic template data.
+  , _personalizationDynamicTemplateData :: Maybe Value
   } deriving (Show, Eq)
 
 -- | Personalization smart constructor only asking for the mandatory fields
@@ -114,6 +116,7 @@ personalization to =
   , _personalizationHeaders       = Nothing
   , _personalizationSubstitutions = Nothing
   , _personalizationSendAt        = Nothing
+  , _personalizationDynamicTemplateData = Nothing
   }
 
 $(deriveToJSON (defaultOptions
