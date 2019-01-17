@@ -427,5 +427,5 @@ sendMail (ApiKey key) mail' = do
       opts = defaults &
           (header "Authorization" .~ [tkn])
         . (header "Content-Type" .~ ["application/json"])
-  r <- postWith opts (T.unpack sendGridAPI) (toJSON mail')
+  r <- postWith opts (T.unpack sendGridAPI) $ encode (toJSON mail')
   return $ r ^. responseStatus . statusCode
