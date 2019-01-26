@@ -1,5 +1,6 @@
 # SendGrid-v3
 [![Build Status](https://travis-ci.org/marcelbuesing/sendgrid-v3.svg?branch=dev)](https://travis-ci.org/marcelbuesing/sendgrid-v3)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fmarcelbuesing%2Fsendgrid-v3.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmarcelbuesing%2Fsendgrid-v3?ref=badge_shield)
 
 A library for accessing the [v3 SendGrid API](https://sendgrid.com/docs/API_Reference/api_v3.html) in Haskell.
 
@@ -36,3 +37,7 @@ echo "export SENDGRID_API_KEY='SG.YOURKEY'" > sendgrid.env
 echo "export SENDGRID_TEST_MAIL='target.email.address@doe.com' > sendgrid.env
 source ./sendgrid.env
 ```
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fmarcelbuesing%2Fsendgrid-v3.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmarcelbuesing%2Fsendgrid-v3?ref=badge_large)
