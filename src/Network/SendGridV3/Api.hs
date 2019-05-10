@@ -1,5 +1,5 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 -- | Module that implements the Mail API of SendGrid v3.
 --   https://sendgrid.com/docs/API_Reference/api_v3.html
@@ -33,19 +33,22 @@
 --
 module Network.SendGridV3.Api where
 
-import           Control.Lens hiding ((.=), from, to)
+import           Control.Exception                        ( try )
+import           Control.Lens                      hiding ( from
+                                                          , to
+                                                          , (.=)
+                                                          )
 import           Data.Aeson
 import           Data.Aeson.TH
-import           Data.Char (toLower)
-import           Data.List.NonEmpty (NonEmpty)
-import           Data.Semigroup ((<>))
-import qualified Data.Text as T
+import           Data.ByteString.Lazy                     ( ByteString )
+import           Data.Char                                ( toLower )
+import           Data.List.NonEmpty                       ( NonEmpty )
+import           Data.Semigroup                           ( (<>) )
+import qualified Data.Text                     as T
 import           Data.Text.Encoding
-import           Network.Wreq hiding (Options)
-import           Network.HTTP.Client (HttpException)
-import           Data.ByteString.Lazy (ByteString)
-import           Control.Exception (try)
-import           Network.SendGridV3.JSON (unPrefix)
+import           Network.HTTP.Client                      ( HttpException )
+import           Network.SendGridV3.JSON                  ( unPrefix )
+import           Network.Wreq                      hiding ( Options )
 
 -- | URL to SendGrid Mail API
 sendGridAPI :: T.Text
@@ -91,36 +94,35 @@ data Personalization = Personalization
   { -- | An array of recipients. Each object within this array may contain the name, but must
     --   always contain the email, of a recipient. Each object within personalizations can be thought of as an envelope
     --   - it defines who should receive an individual message and how that message should be handled.
-    _personalizationTo            :: NonEmpty MailAddress
+    _personalizationTo                  :: NonEmpty MailAddress
     -- | An array of recipients who will receive a copy of your email.
-  , _personalizationCc            :: Maybe [MailAddress]
+  , _personalizationCc                  :: Maybe [MailAddress]
   -- | An array of recipients who will receive a blind carbon copy of your email. Each object within this array may
   --   contain the name, but must always contain the email, of a recipient.
-  , _personalizationBcc           :: Maybe [MailAddress]
+  , _personalizationBcc                 :: Maybe [MailAddress]
   -- | The subject of your email.
-  , _personalizationSubject       :: Maybe T.Text
+  , _personalizationSubject             :: Maybe T.Text
   -- | A collection of JSON key/value pairs allowing you to specify specific handling instructions for your email.
-  , _personalizationHeaders       :: Maybe [(T.Text, T.Text)]
+  , _personalizationHeaders             :: Maybe [(T.Text, T.Text)]
   -- | A collection of key/value pairs following the pattern "substitution_tag":"value to substitute".
-  , _personalizationSubstitutions :: Maybe Object
+  , _personalizationSubstitutions       :: Maybe Object
   -- | A unix timestamp allowing you to specify when you want your email to be delivered.
   --   Scheduling more than 72 hours in advance is forbidden.
-  , _personalizationSendAt        :: Maybe Int
+  , _personalizationSendAt              :: Maybe Int
   -- | A JSON object to include as dynamic template data.
   , _personalizationDynamicTemplateData :: Maybe Value
   } deriving (Show, Eq)
 
 -- | Personalization smart constructor only asking for the mandatory fields
 personalization :: NonEmpty MailAddress -> Personalization
-personalization to =
-  Personalization
-  { _personalizationTo            = to
-  , _personalizationCc            = Nothing
-  , _personalizationBcc           = Nothing
-  , _personalizationSubject       = Nothing
-  , _personalizationHeaders       = Nothing
-  , _personalizationSubstitutions = Nothing
-  , _personalizationSendAt        = Nothing
+personalization to = Personalization
+  { _personalizationTo                  = to
+  , _personalizationCc                  = Nothing
+  , _personalizationBcc                 = Nothing
+  , _personalizationSubject             = Nothing
+  , _personalizationHeaders             = Nothing
+  , _personalizationSubstitutions       = Nothing
+  , _personalizationSendAt              = Nothing
   , _personalizationDynamicTemplateData = Nothing
   }
 
@@ -139,7 +141,7 @@ data Disposition =
   deriving (Show, Eq)
 
 instance ToJSON Disposition where
-  toJSON Inline = "inline"
+  toJSON Inline     = "inline"
   toJSON Attachment = "attachment"
 
 data MailAttachment = MailAttachment
@@ -164,7 +166,7 @@ $(deriveToJSON (defaultOptions
 -- | An object allowing you to specify how to handle unsubscribes.
 data Asm = Asm
   { -- | The unsubscribe group to associate with this email.
-    _asmGroupId :: Int
+    _asmGroupId         :: Int
     -- | An array containing the unsubscribe groups that you would like to
     --   be displayed on the unsubscribe preferences page.
   , _asmGroupsToDisplay :: Maybe [Int]
@@ -328,15 +330,15 @@ data MailSettings = MailSettings
  {
 -- | This allows you to have a blind carbon copy automatically sent to the specified
 --   email address for every email that is sent.
-   _mailSettingsBcc                   :: Maybe Bcc
+   _mailSettingsBcc                  :: Maybe Bcc
  -- |  Allows you to bypass all unsubscribe groups and suppressions.
- , _mailSettingsBypassListManagement  :: Maybe BypassListManagement
+ , _mailSettingsBypassListManagement :: Maybe BypassListManagement
  -- | The default footer that you would like included on every email.
- , _mailSettingsFooter                :: Maybe Footer
+ , _mailSettingsFooter               :: Maybe Footer
  -- | This allows you to send a test email to ensure that your request body is valid and formatted correctly.
- , _mailSettingsSandboxMode           :: Maybe SandboxMode
+ , _mailSettingsSandboxMode          :: Maybe SandboxMode
  -- | This allows you to test the content of your email for spam.
- , _mailSettingsSpamCheck             :: Maybe SpamCheck
+ , _mailSettingsSpamCheck            :: Maybe SpamCheck
  } deriving (Show, Eq)
 
 $(deriveToJSON (defaultOptions
@@ -357,7 +359,7 @@ data Mail a b = Mail
   , _mailSubject          :: T.Text
   -- | An array in which you may specify the content of your email.
   --   You can include multiple mime types of content, but you must specify at least one mime type.
-  , _mailContent          :: NonEmpty MailContent
+  , _mailContent          :: Maybe (NonEmpty MailContent)
   -- | An array of objects in which you can specify any attachments you want to include.
   , _mailAttachments      :: Maybe [MailAttachment]
   -- | The id of a template that you would like to use.
@@ -400,14 +402,19 @@ $(deriveToJSON (defaultOptions
               , constructorTagModifier = map toLower }) ''Mail)
 
 -- | Smart constructor for `Mail`, asking only for the mandatory `Mail` parameters.
-mail :: (ToJSON a, ToJSON b) => [Personalization] -> MailAddress -> T.Text -> NonEmpty MailContent -> Mail a b
-mail personalizations from subject content =
-  Mail
+mail
+  :: (ToJSON a, ToJSON b)
+  => [Personalization]
+  -> MailAddress
+  -> T.Text
+  -> Maybe (NonEmpty MailContent)
+  -> Mail a b
+mail personalizations from subject mContent = Mail
   { _mailPersonalizations = personalizations
   , _mailFrom             = from
   , _mailReplyTo          = Nothing
   , _mailSubject          = subject
-  , _mailContent          = content
+  , _mailContent          = mContent
   , _mailAttachments      = Nothing
   , _mailTemplateId       = Nothing
   , _mailSections         = Nothing :: Maybe a
@@ -432,11 +439,16 @@ mail personalizations from subject content =
 --  - A successful @'Response'@ from the SendGrid API
 --  - An @'HttpException'@, thrown from @'Network.Wreq.postWith'@
 --
-sendMail :: (ToJSON a, ToJSON b) => ApiKey -> Mail a b -> IO (Either HttpException (Response ByteString))
+sendMail
+  :: (ToJSON a, ToJSON b)
+  => ApiKey
+  -> Mail a b
+  -> IO (Either HttpException (Response ByteString))
 sendMail (ApiKey key) mail' = do
   let tkn = encodeUtf8 $ "Bearer " <> key
-      opts = defaults &
-          (header "Authorization" .~ [tkn])
-        . (header "Content-Type" .~ ["application/json"])
+      opts =
+        defaults
+          & (header "Authorization" .~ [tkn])
+          . (header "Content-Type" .~ ["application/json"])
 
   try . postWith opts (T.unpack sendGridAPI) $ encode (toJSON mail')
