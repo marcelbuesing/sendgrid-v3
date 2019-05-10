@@ -13,7 +13,7 @@ testMail :: MailAddress -> Mail () ()
 testMail addr = mail [personalization (fromList [addr])]
                      addr
                      "Mail Subject"
-                     (fromList [mailContentText "Test Content"])
+                     (Just $ fromList [mailContentText "Test Content"])
 
 main :: IO ()
 main = do
