@@ -41,6 +41,9 @@ import           Data.Semigroup ((<>))
 import qualified Data.Text as T
 import           Data.Text.Encoding
 import           Network.Wreq hiding (Options)
+import           Network.HTTP.Client (HttpException)
+import           Data.ByteString.Lazy (ByteString)
+import           Control.Exception (try)
 
 -- | URL to SendGrid Mail API
 sendGridAPI :: T.Text
@@ -416,16 +419,21 @@ mail personalizations from subject content =
   , _mailTrackingSettings = Nothing
   }
 
--- | Send an email via the SendGrid API.
+-- | Send an email via the @SendGrid@ API.
 --
 --  [@a@] Type of Mail Section, see `_mailSections` for details.
 --
 --  [@b@] Type of Custom Arg, see `_mailCustomArgs` for details.
-sendMail :: (ToJSON a, ToJSON b) => ApiKey -> Mail a b -> IO Int
+--
+--  Returns either:
+--  - A successful @'Response'@ from the SendGrid API
+--  - An @'HttpException'@, thrown from @'Network.Wreq.postWith'@
+--
+sendMail :: (ToJSON a, ToJSON b) => ApiKey -> Mail a b -> IO (Either HttpException (Response ByteString))
 sendMail (ApiKey key) mail' = do
   let tkn = encodeUtf8 $ "Bearer " <> key
       opts = defaults &
           (header "Authorization" .~ [tkn])
         . (header "Content-Type" .~ ["application/json"])
-  r <- postWith opts (T.unpack sendGridAPI) $ encode (toJSON mail')
-  return $ r ^. responseStatus . statusCode
+
+  try . postWith opts (T.unpack sendGridAPI) $ encode (toJSON mail')
