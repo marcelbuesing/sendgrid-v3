@@ -6,6 +6,8 @@ import Network.SendGridV3.Api
 import System.Environment
 import Test.Tasty
 import Test.Tasty.HUnit
+import Control.Lens ((^.))
+import Network.Wreq
 
 testMail :: MailAddress -> Mail () ()
 testMail addr =
@@ -18,11 +20,15 @@ main = do
   defaultMain $ testGroup "SendGrid v3 API"
     [
       testCase "Send email simple" $ do
-        statusCode <- sendMail sendgridKey (testMail testMailAddr)
-        statusCode @?= 202
+        eResponse <- sendMail sendgridKey (testMail testMailAddr)
+        case eResponse of
+          Left err -> error "Failed to send simple email"
+          Right r -> r ^. responseStatus . statusCode @?= 202
     , testCase "Send email with opts" $ do
-        statusCode <- sendMail sendgridKey ((testMail testMailAddr) { _mailSendAt = Just 1516468000 })
-        statusCode @?= 202
+        eResponse <- sendMail sendgridKey ((testMail testMailAddr) { _mailSendAt = Just 1516468000 })
+        case eResponse of
+          Left err -> error "Failed to send email with opts"
+          Right r -> r ^. responseStatus . statusCode @?= 202
     ]
 
 getSendGridKey :: IO ApiKey
