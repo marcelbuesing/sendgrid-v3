@@ -45,13 +45,14 @@ import           Network.Wreq hiding (Options)
 import           Network.HTTP.Client (HttpException)
 import           Data.ByteString.Lazy (ByteString)
 import           Control.Exception (try)
+import           Network.SendGridV3.JSON (unPrefix)
 
 -- | URL to SendGrid Mail API
 sendGridAPI :: T.Text
 sendGridAPI = "https://api.sendgrid.com/v3/mail/send"
 
 -- | Bearer Token for the API
-data ApiKey = ApiKey { _apiKey :: T.Text } deriving (Show, Eq);
+data ApiKey = ApiKey { _apiKey :: T.Text } deriving (Show, Eq)
 
 data MailAddress = MailAddress
   { -- | EmailAddress e.g. john@doe.com
@@ -61,7 +62,7 @@ data MailAddress = MailAddress
   } deriving (Show, Eq)
 
 $(deriveToJSON (defaultOptions
-              { fieldLabelModifier = drop (length ("_mailAddress" :: String))
+              { fieldLabelModifier = unPrefix "_mailAddress"
               , constructorTagModifier = map toLower }) ''MailAddress)
 
 data MailContent = MailContent
@@ -80,7 +81,7 @@ mailContentHtml :: T.Text -> MailContent
 mailContentHtml html = MailContent "text/html" html
 
 $(deriveToJSON (defaultOptions
-              { fieldLabelModifier = drop (length ("_mailContent" :: String))
+              { fieldLabelModifier = unPrefix "_mailContent"
               , omitNothingFields = True
               , constructorTagModifier = map toLower }) ''MailContent)
 
@@ -124,7 +125,7 @@ personalization to =
   }
 
 $(deriveToJSON (defaultOptions
-              { fieldLabelModifier = drop (length ("_personalization" :: String))
+              { fieldLabelModifier = unPrefix "_personalization"
               , constructorTagModifier = map toLower }) ''Personalization)
 
 -- | The content-disposition of the attachment specifying how you would like the attachment to be displayed.
@@ -155,7 +156,7 @@ data MailAttachment = MailAttachment
   } deriving (Show, Eq)
 
 $(deriveToJSON (defaultOptions
-              { fieldLabelModifier = drop (length ("_mailAttachment" :: String))
+              { fieldLabelModifier = unPrefix "_mailAttachment"
               , omitNothingFields = True
               , constructorTagModifier = map toLower }) ''MailAttachment)
 
@@ -169,7 +170,7 @@ data Asm = Asm
   } deriving (Show, Eq)
 
 $(deriveToJSON (defaultOptions
-              { fieldLabelModifier = drop (length ("_asm" :: String))
+              { fieldLabelModifier = unPrefix "_asm"
               , omitNothingFields = True
               , constructorTagModifier = map toLower }) ''Asm)
 
@@ -183,7 +184,7 @@ data Bcc = Bcc
   } deriving (Show, Eq)
 
 $(deriveToJSON (defaultOptions
-              { fieldLabelModifier = drop (length ("_bcc" :: String))
+              { fieldLabelModifier = unPrefix "_bcc"
               , omitNothingFields = True
               , constructorTagModifier = map toLower }) ''Bcc)
 
@@ -196,7 +197,7 @@ data BypassListManagement = BypassListManagement
   } deriving (Show, Eq)
 
 $(deriveToJSON (defaultOptions
-              { fieldLabelModifier = drop (length ("_bypassListManagement" :: String))
+              { fieldLabelModifier = unPrefix "_bypassListManagement"
               , constructorTagModifier = map toLower }) ''BypassListManagement)
 
 -- | The default footer that you would like included on every email.
@@ -210,7 +211,7 @@ data Footer = Footer
   } deriving (Show, Eq)
 
 $(deriveToJSON (defaultOptions
-              { fieldLabelModifier = drop (length ("_footer" :: String))
+              { fieldLabelModifier = unPrefix "_footer"
               , omitNothingFields = True
               , constructorTagModifier = map toLower }) ''Footer)
 
@@ -221,7 +222,7 @@ data SandboxMode = SandboxMode
   } deriving (Show, Eq)
 
 $(deriveToJSON (defaultOptions
-              { fieldLabelModifier = drop (length ("_sandboxMode" :: String))
+              { fieldLabelModifier = unPrefix "_sandboxMode"
               , constructorTagModifier = map toLower }) ''SandboxMode)
 
 -- | This allows you to test the content of your email for spam.
@@ -236,7 +237,7 @@ data SpamCheck = SpamCheck
   } deriving (Show, Eq)
 
 $(deriveToJSON (defaultOptions
-              { fieldLabelModifier = drop (length ("_spamCheck" :: String))
+              { fieldLabelModifier = unPrefix "_spamCheck"
               , omitNothingFields = True
               , constructorTagModifier = map toLower }) ''SpamCheck)
 
@@ -249,7 +250,7 @@ data ClickTracking = ClickTracking
   } deriving (Show, Eq)
 
 $(deriveToJSON (defaultOptions
-              { fieldLabelModifier = drop (length ("_clickTracking" :: String))
+              { fieldLabelModifier = unPrefix "_clickTracking"
               , omitNothingFields = True
               , constructorTagModifier = map toLower }) ''ClickTracking)
 
@@ -263,7 +264,7 @@ data OpenTracking = OpenTracking
   } deriving (Show, Eq)
 
 $(deriveToJSON (defaultOptions
-              { fieldLabelModifier = drop (length ("_openTracking" :: String))
+              { fieldLabelModifier = unPrefix "_openTracking"
               , omitNothingFields = True
               , constructorTagModifier = map toLower }) ''OpenTracking)
 
@@ -280,7 +281,7 @@ data SubscriptionTracking = SubscriptionTracking
   } deriving (Show, Eq)
 
 $(deriveToJSON (defaultOptions
-              { fieldLabelModifier = drop (length ("_subscriptionTracking" :: String))
+              { fieldLabelModifier = unPrefix "_subscriptionTracking"
               , omitNothingFields = True
               , constructorTagModifier = map toLower }) ''SubscriptionTracking)
 
@@ -301,7 +302,7 @@ data Ganalytics = Ganalytics
   } deriving (Show, Eq)
 
 $(deriveToJSON (defaultOptions
-              { fieldLabelModifier = drop (length ("_ganalytics" :: String))
+              { fieldLabelModifier = unPrefix "_ganalytics"
               , omitNothingFields = True
               , constructorTagModifier = map toLower }) ''Ganalytics)
 
@@ -317,7 +318,7 @@ data TrackingSettings = TrackingSettings
   } deriving (Show, Eq)
 
 $(deriveToJSON (defaultOptions
-              { fieldLabelModifier = drop (length ("_trackingSettings" :: String))
+              { fieldLabelModifier = unPrefix "_trackingSettings"
               , omitNothingFields = True
               , constructorTagModifier = map toLower }) ''TrackingSettings)
 
@@ -338,7 +339,7 @@ data MailSettings = MailSettings
  } deriving (Show, Eq)
 
 $(deriveToJSON (defaultOptions
-              { fieldLabelModifier = drop (length ("_mailSettings" :: String))
+              { fieldLabelModifier = unPrefix "_mailSettings"
               , omitNothingFields = True
               , constructorTagModifier = map toLower }) ''MailSettings)
 
@@ -393,7 +394,7 @@ data Mail a b = Mail
   } deriving (Show, Eq)
 
 $(deriveToJSON (defaultOptions
-              { fieldLabelModifier = drop (length ("_mail" :: String))
+              { fieldLabelModifier = unPrefix "_mail"
               , omitNothingFields = True
               , constructorTagModifier = map toLower }) ''Mail)
 
