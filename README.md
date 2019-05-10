@@ -8,6 +8,8 @@ A library for accessing the [v3 SendGrid API](https://sendgrid.com/docs/API_Refe
 
 import Data.List.NonEmpty (fromList)
 import Network.SendGridV3.Api
+import Control.Lens ((^.))
+import Network.Wreq (responseStatus, statusCode)
 
 sendGridApiKey :: ApiKey
 sendGridApiKey = ApiKey "SG..."
@@ -22,12 +24,11 @@ testMail =
 
 main :: IO ()
 main = do
-  -- Simple Send
-  statusCode <- sendMail sendGridApiKey testMail
-  print statusCode
-  -- Send with further options
-  statusCode' <- sendMail sendGridApiKey (testMail { _mailSendAt = Just 1516468000 })
-  print statusCode'
+  -- Send an email, overriding options as needed
+  eResponse <- sendMail sendGridApiKey (testMail { _mailSendAt = Just 1516468000 })
+  case eResponse of
+    Left httpException -> error $ show httpException
+    Right response -> print (response ^. responseStatus . statusCode)
 ```
 
 # Test Setup

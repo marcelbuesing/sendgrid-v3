@@ -6,13 +6,15 @@
 --
 -- >
 -- > {-# LANGUAGE OverloadedStrings #-}
--- > 
+-- >
 -- > import Data.List.NonEmpty (fromList)
 -- > import Network.SendGridV3.Api
--- > 
+-- > import Control.Lens ((^.))
+-- > import Network.Wreq (responseStatus, statusCode)
+-- >
 -- > sendGridApiKey :: ApiKey
 -- > sendGridApiKey = ApiKey "SG..."
--- > 
+-- >
 -- > testMail :: Mail () ()
 -- > testMail =
 -- >   let to = personalization $ fromList [MailAddress "john@example.com" "John Doe"]
@@ -20,15 +22,14 @@
 -- >       subject = "Email Subject"
 -- >       content = fromList [mailContentText "Example Content"]
 -- >   in mail [to] from subject content
--- > 
+-- >
 -- > main :: IO ()
 -- > main = do
--- >   -- Simple Send
--- >   statusCode <- sendMail sendGridApiKey testMail
--- >   print statusCode
--- >   -- Send with further options
--- >   statusCode' <- sendMail sendGridApiKey (testMail { _mailSendAt = Just 1516468000 })
--- >   print statusCode'
+-- >   -- Send an email, overriding options as needed
+-- >   eResponse <- sendMail sendGridApiKey (testMail { _mailSendAt = Just 1516468000 })
+-- >   case eResponse of
+-- >     Left httpException -> error $ show httpException
+-- >     Right response -> print (response ^. responseStatus . statusCode)
 --
 module Network.SendGridV3.Api where
 
