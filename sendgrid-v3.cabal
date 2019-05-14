@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                sendgrid-v3
-version:             0.2.2.0
+version:             0.2.2.1
 synopsis:            Sendgrid v3 API library
 description:         SendGrid v3 Mail API client
 homepage:            https://github.com/marcelbuesing/sendgrid-v3
