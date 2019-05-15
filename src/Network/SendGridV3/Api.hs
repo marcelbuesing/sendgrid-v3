@@ -102,7 +102,7 @@ data Personalization = Personalization
   -- | A collection of JSON key/value pairs allowing you to specify specific handling instructions for your email.
   , _personalizationHeaders       :: Maybe [(T.Text, T.Text)]
   -- | A collection of key/value pairs following the pattern "substitution_tag":"value to substitute".
-  , _personalizationSubstitutions :: Maybe [(T.Text, T.Text)]
+  , _personalizationSubstitutions :: Maybe Object
   -- | A unix timestamp allowing you to specify when you want your email to be delivered.
   --   Scheduling more than 72 hours in advance is forbidden.
   , _personalizationSendAt        :: Maybe Int
