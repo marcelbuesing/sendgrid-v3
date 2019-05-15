@@ -111,7 +111,7 @@ data Personalization = Personalization
   } deriving (Show, Eq)
 
 -- | Personalization smart constructor only asking for the mandatory fields
-personalization :: (NonEmpty MailAddress) -> Personalization
+personalization :: NonEmpty MailAddress -> Personalization
 personalization to =
   Personalization
   { _personalizationTo            = to
@@ -126,6 +126,7 @@ personalization to =
 
 $(deriveToJSON (defaultOptions
               { fieldLabelModifier = unPrefix "_personalization"
+              , omitNothingFields = True
               , constructorTagModifier = map toLower }) ''Personalization)
 
 -- | The content-disposition of the attachment specifying how you would like the attachment to be displayed.
@@ -399,7 +400,7 @@ $(deriveToJSON (defaultOptions
               , constructorTagModifier = map toLower }) ''Mail)
 
 -- | Smart constructor for `Mail`, asking only for the mandatory `Mail` parameters.
-mail :: (ToJSON a, ToJSON b) => [Personalization] -> MailAddress -> T.Text -> (NonEmpty MailContent) -> Mail a b
+mail :: (ToJSON a, ToJSON b) => [Personalization] -> MailAddress -> T.Text -> NonEmpty MailContent -> Mail a b
 mail personalizations from subject content =
   Mail
   { _mailPersonalizations = personalizations
