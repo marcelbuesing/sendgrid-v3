@@ -24,7 +24,7 @@ library
   other-modules:       Network.SendGridV3.JSON
   -- other-extensions:
   build-depends:       aeson >= 1.3.0
-                     , base >=4.8 && < 4.13
+                     , base >=4.8 && < 4.14
                      , lens >= 4.13
                      , semigroups >= 0.18
                      , text >= 1.2
