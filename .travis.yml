@@ -1,14 +1,44 @@
 sudo: false
+language: haskell
 cache:
   directories:
+  - "$HOME/.cabal/store"
   - "$HOME/.stack"
+  - "$TRAVIS_BUILD_DIR/.stack-work"
+cabal: "3.2"
+matrix:
+  include:
+  - env: GHCVER=8.6.5 STACK_YAML=stack.yaml
+    ghc: 8.6.5
+  - env: GHCVER=8.8.3 STACK_YAML=stack-8.8.yaml
+    ghc: 8.8.3
+  - env: GHCVER=8.10.1
+    ghc: 8.10.1
 before_install:
 - mkdir -p ~/.local/bin
 - export PATH=$HOME/.local/bin:$PATH
 - travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards
   --strip-components=1 -C ~/.local/bin '*/stack'
+- stack config set system-ghc --global true
+- export PATH=/opt/ghc/$GHCVER/bin:$PATH
+install:
+  - |
+    if [ -z "$STACK_YAML" ]; then
+      ghc --version
+      cabal --version
+      cabal new-update
+      cabal new-build --enable-tests
+    else
+      stack --version
+      stack build --system-ghc --test --no-run-tests
+    fi
 script:
-- stack --no-terminal --skip-ghc-check test
+- |
+  if [ -z "$STACK_YAML" ]; then
+    cabal new-test --enable-tests
+  else
+    stack --no-terminal test --system-ghc
+  fi
 env:
   global:
   - secure: lMVWRVzRUVsbxp1Zce9ezxCRaaFR/+UVpbWT+ElvTQz+1kSs1CccGdMdocKD2edY2mt0hhXDe3jpaZMnW7sTBkrivg76MdAb2UyZDjzj0xXUpcbUB1pweaFGWxE9HkpIq+fb0NkajWgw1wpZqk/+vjU/8RMPBvDkvIHQRtYewY1nnPDpDPP4nUqnKNdPOlDKRsHY66l+XN6ukxXFCqb0PBl4qmzzgbwHpLxNBPgACtPcd4m7wVLVyl1tdiektWhblO4gXME0B8Qm9Ggq1Bbjj0FOqX/rHSalzOpOBeMK8b1hxHehFSkr+Zjqwn34c7IMAZ5zjuOG7vUeHR6iIjtgDSBEPCMsWze/4vb6JGl679LISZ3IQuabBf7sJGfyuCzVLQviCqqDMdzWDPPHNkUmeBGqQUW+awwZBygUTj3dMH2AFDtq1iN0crgxtP9m+awVb+dGpiMfV3iWefiO7ADVvz1Bs+pkmHfJWD0nRDm2rtOw/iRimVnFtfa6QYr53uYnNKTYkqGT65ca4m87+lIwWqU0z5184KTSqHiebZE7/qTZovcwKymM0lW6YdOeMI+O252DbOowaTDIcpNIoDEjtueIfgNhi1T79Es8m8MFvtRWqPCHLm3aTVQwsT0LWR7DAGA95URFG6Cbz811IMWzC2L1cGcT7ELdcmXpTDm7zlg=
