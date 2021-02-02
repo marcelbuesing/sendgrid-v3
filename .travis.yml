@@ -13,8 +13,8 @@ matrix:
   - env: GHCVER=8.8.3 STACK_YAML=stack-8.8.yaml
     ghc: 8.8.3
 # Make sure to update the version condition in the deploy step
-  - env: GHCVER=8.10.2
-    ghc: 8.10.2
+  - env: GHCVER=8.10.3
+    ghc: 8.10.3
 before_install:
 - mkdir -p ~/.local/bin
 - export PATH=$HOME/.local/bin:$PATH
@@ -52,4 +52,4 @@ deploy:
   on:
     repo: marcelbuesing/sendgrid-v3
     tags: true
-    condition: $TRAVIS_HASKELL_VERSION = 8.10.2
+    condition: $TRAVIS_HASKELL_VERSION = 8.10.3
