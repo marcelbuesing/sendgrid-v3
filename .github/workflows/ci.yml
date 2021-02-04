@@ -62,6 +62,8 @@ jobs:
         cabal build all
 
     - name: Test
+      env:
+        SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
       run: |
         cabal test all
 

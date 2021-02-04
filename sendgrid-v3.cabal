@@ -17,8 +17,8 @@ extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
 tested-with:
   GHC ==8.6.5
-   || ==8.8.3
-   || ==8.10.2
+   || ==8.8.4
+   || ==8.10.3
 source-repository head
   type:              git
   location:          https://github.com/marcelbuesing/sendgrid-v3
