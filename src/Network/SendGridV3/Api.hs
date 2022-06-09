@@ -43,6 +43,7 @@ import           Data.Aeson.TH
 import           Data.ByteString.Lazy                     ( ByteString )
 import           Data.Char                                ( toLower )
 import           Data.List.NonEmpty                       ( NonEmpty )
+import qualified Data.Map                      as Map
 import           Data.Semigroup                           ( (<>) )
 import qualified Data.Text                     as T
 import           Data.Text.Encoding
@@ -103,7 +104,7 @@ data Personalization = Personalization
   -- | The subject of your email.
   , _personalizationSubject             :: Maybe T.Text
   -- | A collection of JSON key/value pairs allowing you to specify specific handling instructions for your email.
-  , _personalizationHeaders             :: Maybe [(T.Text, T.Text)]
+  , _personalizationHeaders             :: Maybe (Map.Map T.Text T.Text)
   -- | A collection of key/value pairs following the pattern "substitution_tag":"value to substitute".
   , _personalizationSubstitutions       :: Maybe Object
   -- | A unix timestamp allowing you to specify when you want your email to be delivered.
@@ -371,7 +372,7 @@ data Mail a b = Mail
   -- | An object containing key/value pairs of header names and the value to substitute for them.
   --   You must ensure these are properly encoded if they contain unicode characters.
   --   Must not be one of the reserved headers.
-  , _mailHeaders          :: Maybe [(T.Text, T.Text)]
+  , _mailHeaders          :: Maybe (Map.Map T.Text T.Text)
   -- | An array of category names for this message. Each category name may not exceed 255 characters.
   , _mailCategories       :: Maybe [T.Text]
   -- | Values that are specific to the entire send that will be carried along with

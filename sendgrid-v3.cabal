@@ -29,6 +29,7 @@ library
   -- other-extensions:
   build-depends:       aeson >= 1.3.0
                      , base >=4.8 && < 4.15
+                     , containers
                      , lens >= 4.13
                      , semigroups >= 0.18
                      , text >= 1.2
