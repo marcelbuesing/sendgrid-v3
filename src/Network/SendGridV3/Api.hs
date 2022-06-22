@@ -356,6 +356,8 @@ data Mail a b = Mail
   , _mailFrom             :: MailAddress
   -- | Address details of the person to whom you are sending an email.
   , _mailReplyTo          :: Maybe MailAddress
+  -- | Address details of the people to whom you are sending an email.
+  , _mailReplyToList      :: Maybe (NonEmpty MailAddress)
   -- | The subject of your email.
   , _mailSubject          :: T.Text
   -- | An array in which you may specify the content of your email.
@@ -414,6 +416,7 @@ mail personalizations from subject mContent = Mail
   { _mailPersonalizations = personalizations
   , _mailFrom             = from
   , _mailReplyTo          = Nothing
+  , _mailReplyToList      = Nothing
   , _mailSubject          = subject
   , _mailContent          = mContent
   , _mailAttachments      = Nothing
