@@ -62,7 +62,7 @@ data MailAddress = MailAddress
   { -- | EmailAddress e.g. john@doe.com
     _mailAddressEmail :: T.Text
     -- | The name of the person to whom you are sending an email. E.g. "John Doe"
-  , _mailAddressName  :: T.Text
+  , _mailAddressName  :: Maybe T.Text
   } deriving (Show, Eq)
 
 $(deriveToJSON (defaultOptions
