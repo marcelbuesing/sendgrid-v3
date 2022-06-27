@@ -62,12 +62,14 @@ data MailAddress = MailAddress
   { -- | EmailAddress e.g. john@doe.com
     _mailAddressEmail :: T.Text
     -- | The name of the person to whom you are sending an email. E.g. "John Doe"
-  , _mailAddressName  :: Maybe T.Text
+  , _mailAddressName  :: T.Text
   } deriving (Show, Eq)
 
-$(deriveToJSON (defaultOptions
-              { fieldLabelModifier = unPrefix "_mailAddress"
-              , constructorTagModifier = map toLower }) ''MailAddress)
+instance ToJSON MailAddress where
+  toJSON (MailAddress email "") = object ["email" .= email]
+  toJSON (MailAddress email name) = object ["email" .= email, "name" .= name]
+  toEncoding (MailAddress email "") = pairs $ "email" .= email
+  toEncoding (MailAddress email name) = pairs $ "email" .= email <> "name" .= name
 
 data MailContent = MailContent
   { -- | The mime type of the content you are including in your email. For example, “text/plain” or “text/html”.
