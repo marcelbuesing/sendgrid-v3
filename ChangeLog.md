@@ -1,7 +1,9 @@
 # Revision history for sendgrid-v3
 
-## 1.0.0.0 -- Unreleased
+## 1.0.0.0 -- 2022-06-27
 
+- Aditya Manthramurthy: Skip running tests in CI if API keys are not set (#27) (565d5a1)
+- Aditya Manthramurthy: Update ChangeLog.md with info about previous releases (#26) (2601481)
 - Fumiaki Kinoshita: make the _mailAddressName field Text again; toJSON omits it if it's empty (#25) (dd9b795)
 - Aditya Manthramurthy: Attempt to fix CI (#23) (43cb429)
 - Aditya Manthramurthy: Fix tests (#24) (b1e2ce3)
