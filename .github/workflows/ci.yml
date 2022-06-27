@@ -129,5 +129,10 @@ jobs:
         stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
 
     - name: Test
+      if: ${{ env.SENDGRID_API_KEY != '' && env.SENDGRID_TEST_MAIL != '' }}
       run: |
         stack test --system-ghc
+
+    - name: Documentation
+      run: |
+        stack haddock --system-ghc --no-haddock-deps
