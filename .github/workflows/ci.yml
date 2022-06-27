@@ -76,6 +76,7 @@ jobs:
         cabal build all
 
     - name: Test
+      if: ${{ env.SENDGRID_API_KEY != '' && env.SENDGRID_TEST_MAIL != '' }}
       run: |
         cabal test all
 
