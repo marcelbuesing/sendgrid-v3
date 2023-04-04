@@ -1,5 +1,8 @@
 # Revision history for sendgrid-v3
 
+## Unreleased
+- Niclas Åhdén: Build with GHC 9.4.4 (#29) (d93fa06)
+
 ## 1.0.0.0 -- 2022-06-27
 
 - Aditya Manthramurthy: Skip running tests in CI if API keys are not set (#27) (565d5a1)
