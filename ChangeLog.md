@@ -1,7 +1,8 @@
 # Revision history for sendgrid-v3
 
-## Unreleased
+## 1.0.0.1 -- 2023-04-25
 - Niclas Åhdén: Build with GHC 9.4.4 (#29) (d93fa06)
+- Aditya Manthramurthy:  Add GHC 9.6 to CI (#30) (96a1b89)
 
 ## 1.0.0.0 -- 2022-06-27
 
