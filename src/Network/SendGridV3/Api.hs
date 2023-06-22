@@ -336,6 +336,12 @@ data MailSettings = MailSettings
    _mailSettingsBcc                  :: Maybe Bcc
  -- |  Allows you to bypass all unsubscribe groups and suppressions.
  , _mailSettingsBypassListManagement :: Maybe BypassListManagement
+ -- | Allows you to bypass suppressions due to spam reports.
+ , _mailSettingsBypassSpamManagement :: Maybe BypassListManagement
+ -- | Allows you to bypass the bounce list.
+ , _mailSettingsBypassBounceManagement :: Maybe BypassListManagement
+ -- | Allows you to bypass global unsubscribes.
+ , _mailSettingsBypassUnsubscribeManagement :: Maybe BypassListManagement
  -- | The default footer that you would like included on every email.
  , _mailSettingsFooter               :: Maybe Footer
  -- | This allows you to send a test email to ensure that your request body is valid and formatted correctly.
