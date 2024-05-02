@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE CPP #-}
 
 -- | Module that implements the Mail API of SendGrid v3.
 --   https://sendgrid.com/docs/API_Reference/api_v3.html
@@ -8,12 +9,13 @@
 -- > {-# LANGUAGE OverloadedStrings #-}
 -- >
 -- > import Data.List.NonEmpty (fromList)
+-- > import Data.Text (Text)
 -- > import Network.SendGridV3.Api
 -- > import Control.Lens ((^.))
 -- > import Network.Wreq (responseStatus, statusCode)
 -- >
--- > sendGridApiKey :: ApiKey
--- > sendGridApiKey = ApiKey "SG..."
+-- > sendGridApiKey :: Text
+-- > sendGridApiKey = "SG..."
 -- >
 -- > testMail :: Mail () ()
 -- > testMail =
@@ -25,8 +27,10 @@
 -- >
 -- > main :: IO ()
 -- > main = do
+-- >   sendgridSettings <- mkSendGridSettings sendGridApiKey
+-- >
 -- >   -- Send an email, overriding options as needed
--- >   eResponse <- sendMail sendGridApiKey (testMail { _mailSendAt = Just 1516468000 })
+-- >   eResponse <- sendMail sendgridSettings (testMail { _mailSendAt = Just 1516468000 })
 -- >   case eResponse of
 -- >     Left httpException -> error $ show httpException
 -- >     Right response -> print (response ^. responseStatus . statusCode)
@@ -40,6 +44,7 @@ import           Control.Lens                      hiding ( from
                                                           )
 import           Data.Aeson
 import           Data.Aeson.TH
+import qualified Data.ByteString               as B
 import           Data.ByteString.Lazy                     ( ByteString )
 import           Data.Char                                ( toLower )
 import           Data.List.NonEmpty                       ( NonEmpty )
@@ -47,16 +52,50 @@ import qualified Data.Map                      as Map
 import           Data.Semigroup                           ( (<>) )
 import qualified Data.Text                     as T
 import           Data.Text.Encoding
-import           Network.HTTP.Client                      ( HttpException )
+import           Network.HTTP.Client                      ( HttpException, ManagerSettings )
 import           Network.SendGridV3.JSON                  ( unPrefix )
 import           Network.Wreq                      hiding ( Options )
+import           Network.HTTP.Client.TLS                  ( mkManagerSettings, tlsManagerSettings )
+import           Network.Connection                       (TLSSettings(..))
+import           Network.TLS                              (Supported (..), ClientParams (..), EMSMode(..))
+import           Network.Simple.TCP.TLS                   (newDefaultClientParams)
 
 -- | URL to SendGrid Mail API
 sendGridAPI :: T.Text
 sendGridAPI = "https://api.sendgrid.com/v3/mail/send"
 
--- | Bearer Token for the API
-data ApiKey = ApiKey { _apiKey :: T.Text } deriving (Show, Eq)
+-- | Settings for the API, use 'mkSendGridSettings' to construct
+data SendGridSettings = SendGridSettings 
+  { -- | SendGrid API Key
+    _apiKey :: T.Text
+    -- | HTTP Client settings for making API requests 
+  , _tlsManagerSettings :: ManagerSettings
+  } 
+
+-- | Constructs SendGridSettings with the given api key
+mkSendGridSettings :: T.Text -> IO SendGridSettings
+mkSendGridSettings apiKey = do 
+  clientParams <- newDefaultClientParams ("api.sendgrid.com", B.empty)
+  
+  -- Sendgrid does not support extended master secret (as of april 2024), 
+  -- which can be verified by the following command:
+  -- 
+  -- openssl s_client -connect api.sendgrid.com:443
+  -- 
+  -- tls 2.0 changes the default EMS policy to required
+  -- this overrides that setting and restores it to its original value: allow
+  --
+  -- git-annex has a simular issue: https://git-annex.branchable.com/bugs/tls__58___peer_does_not_support_Extended_Main_Secret/
+  let 
+#if MIN_VERSION_tls(2,0,0) 
+      supported = (clientSupported clientParams) { supportedExtendedMainSecret = AllowEMS }
+#else
+      supported = (clientSupported clientParams) { supportedExtendedMasterSec = AllowEMS }
+#endif
+      clientParams' = clientParams {clientSupported = supported}
+      tlsManagerSettings = mkManagerSettings (TLSSettings clientParams') Nothing
+
+  pure $ SendGridSettings apiKey tlsManagerSettings
 
 data MailAddress = MailAddress
   { -- | EmailAddress e.g. john@doe.com
@@ -453,14 +492,15 @@ mail personalizations from subject mContent = Mail
 --
 sendMail
   :: (ToJSON a, ToJSON b)
-  => ApiKey
+  => SendGridSettings
   -> Mail a b
   -> IO (Either HttpException (Response ByteString))
-sendMail (ApiKey key) mail' = do
-  let tkn = encodeUtf8 $ "Bearer " <> key
+sendMail settings mail' = do
+  let tkn = encodeUtf8 $ "Bearer " <> _apiKey settings
       opts =
         defaults
           & (header "Authorization" .~ [tkn])
           . (header "Content-Type" .~ ["application/json"])
+          . (manager .~ Left (_tlsManagerSettings settings))
 
   try . postWith opts (T.unpack sendGridAPI) $ encode (toJSON mail')

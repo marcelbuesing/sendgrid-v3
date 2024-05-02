@@ -17,39 +17,39 @@ testMail addr = mail [personalization (fromList [addr])]
 
 main :: IO ()
 main = do
-  sendgridKey  <- getSendGridKey
+  sendgridKey  <- getSendGridSettings
   testMailAddr <- getTestEmailAddress
   defaultMain $ testGroup
     "SendGrid v3 API"
     [ testCase "Send email simple" $ do
       eResponse <- sendMail sendgridKey (testMail testMailAddr)
       case eResponse of
-        Left  err -> error "Failed to send simple email"
+        Left  err -> assertFailure $ "Failed to send simple email: " <> show err
         Right r   -> r ^. responseStatus . statusCode @?= 202
     , testCase "Send email with opts" $ do
       eResponse <- sendMail
         sendgridKey
         ((testMail testMailAddr) { _mailSendAt = Just 1516468000 })
       case eResponse of
-        Left  err -> error "Failed to send email with opts"
+        Left  err -> assertFailure $ "Failed to send email with opts: " <> show err
         Right r   -> r ^. responseStatus . statusCode @?= 202
     , testCase "Send an email payload with categories correctly" $ do
       let email =
             (testMail testMailAddr) { _mailCategories = Just ["fake-category"] }
       eResponse <- sendMail sendgridKey email
       case eResponse of
-        Left  err -> error "Failed to send email with opts"
+        Left  err -> assertFailure $ "Failed to send email with opts: " <> show err
         Right r   -> r ^. responseStatus . statusCode @?= 202
     ]
 
-getSendGridKey :: IO ApiKey
-getSendGridKey = do
+getSendGridSettings :: IO SendGridSettings
+getSendGridSettings = do
   envKey <- lookupEnv "SENDGRID_API_KEY"
   case envKey of
     Nothing ->
       error
         "Please supply a Sendgrid api key for testing via the ENV var `SENDGRID_API_KEY`"
-    Just k -> return $ ApiKey $ T.pack k
+    Just k -> mkSendGridSettings $ T.pack k
 
 getTestEmailAddress :: IO MailAddress
 getTestEmailAddress = do
