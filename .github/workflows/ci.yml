@@ -19,113 +19,141 @@ env:
 
 jobs:
   cabal:
-    name: ${{ matrix.os }} / ghc ${{ matrix.ghc }}
+    name: ${{ matrix.os }} / ghc ${{ matrix.ghc }} / cabal-${{ matrix.cabal }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        cabal: ["3.8.1.0"]
+        cabal: ["3.8", "latest"]
         ghc:
           - "8.10"
           - "9.0"
           - "9.2"
           - "9.4"
           - "9.6"
+          - "9.8"
+        exclude:
+          # macos llvm issue for versions less than 9.2
+          - os: macos-latest
+            ghc: "8.10"
+          - os: macos-latest
+            ghc: "9.0"
+          # Cabal 3.8 supports GHC < 9.6
+          - cabal: "3.8"
+            ghc: "9.6"
+          - cabal: "3.8"
+            ghc: "9.8"
 
     steps:
-    - uses: actions/checkout@v3
-      if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.ref == 'refs/heads/dev'
+      - uses: actions/checkout@v4
+        if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.ref == 'refs/heads/dev'
 
-    - uses: haskell/actions/setup@v2
-      id: setup-haskell-cabal
-      name: Setup Haskell
-      with:
-        ghc-version: ${{ matrix.ghc }}
-        cabal-version: ${{ matrix.cabal }}
+      - uses: haskell-actions/setup@v2
+        id: setup
+        name: Setup Haskell
+        with:
+          ghc-version: ${{ matrix.ghc }}
+          cabal-version: ${{ matrix.cabal }}
+          cabal-update: true
 
-    - name: Configure
-      run: |
-        cabal configure --enable-tests --enable-benchmarks --test-show-details=direct
+      - name: Configure
+        run: |
+          cabal configure --enable-tests --enable-benchmarks --test-show-details=direct
+          cabal build all --dry-run
+        # The last step generates dist-newstyle/cache/plan.json for the cache key.
 
-    - name: Freeze
-      run: |
-        cabal freeze
+      - name: Restore cached dependencies
+        uses: actions/cache/restore@v4
+        id: cache
+        env:
+          key: ${{ runner.os }}-ghc-${{ steps.setup.outputs.ghc-version }}-cabal-${{ steps.setup.outputs.cabal-version }}
+        with:
+          path: ${{ steps.setup.outputs.cabal-store }}
+          key: ${{ env.key }}-plan-${{ hashFiles('**/plan.json') }}
+          restore-keys: ${{ env.key }}-
 
-    - uses: actions/cache@v3
-      name: Cache ~/.cabal/store and dist-newstyle
-      with:
-        path: |
-          ~/.cabal/store
-          dist-newstyle
-        key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('**/*.cabal', '**/cabal.project', '**/cabal.project.freeze') }}
-        restore-keys: ${{ runner.os }}-${{ matrix.ghc }}-
+      - name: Install dependencies
+        # If we had an exact cache hit, the dependencies will be up to date.
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: cabal build all --only-dependencies
 
-    - name: Install dependencies
-      run: |
-        cabal build all --only-dependencies
+      # Cache dependencies already here, so that we do not have to rebuild them should the subsequent steps fail.
+      - name: Save cached dependencies
+        uses: actions/cache/save@v4
+        # If we had an exact cache hit, trying to save the cache would error because of key clash.
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ steps.setup.outputs.cabal-store }}
+          key: ${{ steps.cache.outputs.cache-primary-key }}
 
-    - name: Build
-      run: |
-        cabal build all
+      - name: Build
+        run: |
+          cabal build all
 
-    - name: Test
-      if: ${{ env.SENDGRID_API_KEY != '' && env.SENDGRID_TEST_MAIL != '' }}
-      run: |
-        cabal test all
+      - name: Test
+        if: ${{ env.SENDGRID_API_KEY != '' && env.SENDGRID_TEST_MAIL != '' }}
+        run: |
+          cabal test all
 
-    - name: Documentation
-      run: |
-        cabal haddock
+      - name: Check cabal file
+        run: cabal check
+
+      - name: Build documentation
+        run: cabal haddock all
 
   stack:
     name: stack / ghc ${{ matrix.ghc }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         ghc:
+          - "8.10"
           - "9.0"
           - "9.2"
           - "9.4"
+          - "9.6"
+          - "9.8"
+        os: [ubuntu-latest]
 
     steps:
-    - uses: actions/checkout@v3
-      if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.ref == 'refs/heads/dev'
+      - uses: actions/checkout@v4
+        if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.ref == 'refs/heads/dev'
 
-    - uses: haskell/actions/setup@v2
-      name: Setup Haskell Stack
-      with:
-        enable-stack: true
-        ghc-version: ${{ matrix.ghc }}
-        stack-version: latest
+      - uses: haskell-actions/setup@v2
+        name: Setup Haskell Stack
+        with:
+          ghc-version: ${{ matrix.ghc }}
+          enable-stack: true
+          stack-version: latest
 
-    - uses: actions/cache@v3
-      name: Cache ~/.stack
-      with:
-        path: ~/.stack
-        key: ${{ runner.os }}-stack-global-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-stack-global-
-    - uses: actions/cache@v3
-      name: Cache .stack-work
-      with:
-        path: .stack-work
-        key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}-${{ hashFiles('**/*.hs') }}
-        restore-keys: |
-          ${{ runner.os }}-stack-work-
+      - uses: actions/cache@v4
+        name: Cache ~/.stack
+        with:
+          path: ~/.stack
+          key: ${{ runner.os }}-stack-global-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-stack-global-
+      - uses: actions/cache@v4
+        name: Cache .stack-work
+        with:
+          path: .stack-work
+          key: ${{ runner.os }}-stack-work-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}-${{ hashFiles('**/*.hs') }}
+          restore-keys: |
+            ${{ runner.os }}-stack-work-
 
-    - name: Install dependencies
-      run: |
-        stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks --only-dependencies
+      - name: Install dependencies
+        run: |
+          stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks --only-dependencies
 
-    - name: Build
-      run: |
-        stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
+      - name: Build
+        run: |
+          stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
 
-    - name: Test
-      if: ${{ env.SENDGRID_API_KEY != '' && env.SENDGRID_TEST_MAIL != '' }}
-      run: |
-        stack test --system-ghc
+      - name: Test
+        if: ${{ env.SENDGRID_API_KEY != '' && env.SENDGRID_TEST_MAIL != '' }}
+        run: |
+          stack test --system-ghc
 
-    - name: Documentation
-      run: |
-        stack haddock --system-ghc --no-haddock-deps
+      - name: Documentation
+        run: |
+          stack haddock --system-ghc --no-haddock-deps
