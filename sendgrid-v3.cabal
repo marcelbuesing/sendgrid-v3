@@ -11,7 +11,12 @@ maintainer:          buesing.marcel@googlemail.com
 -- copyright:
 category:            Network
 build-type:          Simple
-extra-source-files:  ChangeLog.md
+extra-doc-files:
+    ChangeLog.md
+    README.md
+extra-source-files:
+    examples/*.hs
+    stack.yaml
 tested-with: GHC == 8.10.7
            , GHC == 9.0.2
            , GHC == 9.2.8
@@ -60,3 +65,26 @@ test-suite test
                 , tasty-hunit >= 0.10
                 , text >= 1.2
                 , wreq >= 0.5
+
+Flag examples
+  Description: Build the examples
+  Default: False
+  Manual: True
+
+common examples-settings
+  ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+  default-extensions:  OverloadedStrings
+  build-depends:       base >= 4.7 && < 5
+                     , lens
+                     , sendgrid-v3
+                     , text
+                     , wreq
+  hs-source-dirs:      examples
+  if !flag(examples)
+    buildable: False
+
+executable SendEmail
+  import:     examples-settings
+  scope:      private
+  main-is:   SendEmail.hs

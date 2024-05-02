@@ -1,9 +1,3 @@
-# SendGrid-v3
-[![CI](https://github.com/marcelbuesing/sendgrid-v3/actions/workflows/ci.yml/badge.svg)](https://github.com/marcelbuesing/sendgrid-v3/actions/workflows/ci.yml/badge.svg)[![Hackage](https://img.shields.io/hackage/v/sendgrid-v3.svg)](https://hackage.haskell.org/package/sendgrid-v3)
-
-A library for accessing the [v3 SendGrid API](https://sendgrid.com/docs/API_Reference/api_v3.html) in Haskell.
-
-```Haskell
 {-# LANGUAGE OverloadedStrings #-}
 
 import Data.List.NonEmpty (fromList)
@@ -32,11 +26,3 @@ main = do
   case eResponse of
     Left httpException -> error $ show httpException
     Right response -> print (response ^. responseStatus . statusCode)
-```
-
-# Test Setup
-```
-echo "export SENDGRID_API_KEY='SG.YOURKEY'" > sendgrid.env
-echo "export SENDGRID_TEST_MAIL='target.email.address@doe.com' >> sendgrid.env
-source ./sendgrid.env
-```

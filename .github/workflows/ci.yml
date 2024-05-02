@@ -58,7 +58,7 @@ jobs:
 
       - name: Configure
         run: |
-          cabal configure --enable-tests --enable-benchmarks --test-show-details=direct
+          cabal configure --enable-tests --enable-benchmarks --test-show-details=direct -fexamples
           cabal build all --dry-run
         # The last step generates dist-newstyle/cache/plan.json for the cache key.
 
