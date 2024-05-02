@@ -1,5 +1,5 @@
 # SendGrid-v3
-[![Build Status](https://travis-ci.org/marcelbuesing/sendgrid-v3.svg?branch=dev)](https://travis-ci.org/marcelbuesing/sendgrid-v3)
+[![CI](https://github.com/marcelbuesing/sendgrid-v3/actions/workflows/ci.yml/badge.svg)](https://github.com/marcelbuesing/sendgrid-v3/actions/workflows/ci.yml/badge.svg)[![Hackage](https://img.shields.io/hackage/v/sendgrid-v3.svg)](https://hackage.haskell.org/package/sendgrid-v3)
 
 A library for accessing the [v3 SendGrid API](https://sendgrid.com/docs/API_Reference/api_v3.html) in Haskell.
 
