@@ -32,6 +32,8 @@ jobs:
           - "9.4"
           - "9.6"
           - "9.8"
+          - "9.10"
+          - "9.12"
         exclude:
           # macos llvm issue for versions less than 9.2
           - os: macos-latest
@@ -43,6 +45,10 @@ jobs:
             ghc: "9.6"
           - cabal: "3.8"
             ghc: "9.8"
+          - cabal: "3.8"
+            ghc: "9.10"
+          - cabal: "3.8"
+            ghc: "9.12"
 
     steps:
       - uses: actions/checkout@v4
@@ -113,6 +119,8 @@ jobs:
           - "9.4"
           - "9.6"
           - "9.8"
+          - "9.10"
+          - "9.12"
         os: [ubuntu-latest]
 
     steps:
