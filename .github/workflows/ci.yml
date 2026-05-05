@@ -51,7 +51,7 @@ jobs:
             ghc: "9.12"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.ref == 'refs/heads/dev'
 
       - uses: haskell-actions/setup@v2
@@ -69,7 +69,7 @@ jobs:
         # The last step generates dist-newstyle/cache/plan.json for the cache key.
 
       - name: Restore cached dependencies
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         id: cache
         env:
           key: ${{ runner.os }}-ghc-${{ steps.setup.outputs.ghc-version }}-cabal-${{ steps.setup.outputs.cabal-version }}
@@ -85,7 +85,7 @@ jobs:
 
       # Cache dependencies already here, so that we do not have to rebuild them should the subsequent steps fail.
       - name: Save cached dependencies
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         # If we had an exact cache hit, trying to save the cache would error because of key clash.
         if: steps.cache.outputs.cache-hit != 'true'
         with:
@@ -124,7 +124,7 @@ jobs:
         os: [ubuntu-latest]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         if: github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.ref == 'refs/heads/dev'
 
       - uses: haskell-actions/setup@v2
@@ -134,14 +134,14 @@ jobs:
           enable-stack: true
           stack-version: latest
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         name: Cache ~/.stack
         with:
           path: ~/.stack
           key: ${{ runner.os }}-stack-global-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
           restore-keys: |
             ${{ runner.os }}-stack-global-
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         name: Cache .stack-work
         with:
           path: .stack-work
